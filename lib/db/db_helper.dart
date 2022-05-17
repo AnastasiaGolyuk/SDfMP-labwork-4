@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:planner/models/event.dart';
 import 'package:planner/models/note.dart';
 import 'package:planner/models/uploaded_image.dart';
 import 'package:planner/models/user.dart';
@@ -19,7 +20,7 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, 'planner.db');
+    String path = join(documentsDirectory.path, 'planner_4.db');
     return await openDatabase(
       path,
       version: 1,
@@ -54,6 +55,15 @@ class DatabaseHelper {
           description TEXT
       )
       ''');
+
+    await db.execute('''
+      CREATE TABLE events(
+          id INTEGER PRIMARY KEY,
+          idUser INTEGER,
+          title TEXT,
+          date TEXT
+      )
+      ''');
   }
 
   Future<List<User>> getUsers() async {
@@ -72,6 +82,24 @@ class DatabaseHelper {
         ? results.map((c) => UploadedImage.fromJson(c)).toList()
         : [];
     return imagesList;
+  }
+
+  Future<List<Event>> getEvents() async {
+    Database db = await instance.database;
+    var results = await db.query('events');
+    List<Event> eventsList = results.isNotEmpty
+        ? results.map((c) => Event.fromJson(c)).toList()
+        : [];
+    return eventsList;
+  }
+
+  Future<int> getEventsCount() async {
+    Database db = await instance.database;
+    var results = await db.query('events');
+    List<Event> eventsList = results.isNotEmpty
+        ? results.map((c) => Event.fromJson(c)).toList()
+        : [];
+    return eventsList.length;
   }
 
   Future<UploadedImage?> getImage(int idNote) async {
@@ -103,6 +131,21 @@ class DatabaseHelper {
   Future<int> deleteImage(int idNote) async {
     Database db = await instance.database;
     return await db.delete('uploaded_image', where: "idNote = ?", whereArgs: [idNote]);
+  }
+
+  Future<int> addEvent(Event event) async {
+    Database db = await instance.database;
+    return await db.insert('events', event.toJson());
+  }
+
+  Future<int> deleteEvent(int id) async {
+    Database db = await instance.database;
+    return await db.delete('events', where: "id = ?", whereArgs: [id]);
+  }
+
+  Future<int> updateEvent(Event event) async {
+    Database db = await instance.database;
+    return await db.update('events', event.toJson(), where: 'id = ?', whereArgs: [event.id]);
   }
 
   Future<Note> getNote(int id) async {
@@ -144,55 +187,6 @@ class DatabaseHelper {
     return await db.delete('notes', where: 'id = ?', whereArgs: [id]);
   }
 
-  // Future<Note?> getRecentNote(int idUser) async {
-  //   var notes = await getNotes(idUser);
-  //   if (Notes.isEmpty){
-  //     return null;
-  //   }
-  //   var diffDates = <int>[];
-  //   int min = 1000;
-  //   int index=0;
-  //   int i = 0;
-  //   for (Note Note in Notes){
-  //     var diff = DateTime.now().difference(DateTime.parse(Note.timeUpload)).inDays;
-  //     diffDates.add(diff);
-  //     if (diff<=min){
-  //       min=diff;
-  //       index=i;
-  //     }
-  //     i++;
-  //   }
-  //   return Notes[index];
-  // }
-  //
-  // Future<Note?> getCommonNote(int idUser) async {
-  //   var Notes = await getNotes(idUser);
-  //   if (Notes.isEmpty){
-  //     return null;
-  //   }
-  //   var countNotes = List.filled(Consts.titles.length, 0);
-  //   int max = 0;
-  //   int index=0;
-  //   int iDB = 0;
-  //   for (int a=0;a<Consts.titles.length;a++){
-  //     String Note = Consts.titles.elementAt(a);
-  //     for (iDB=0;iDB<Notes.length;iDB++) {
-  //       if (Notes[iDB].Note == Note) {
-  //         countNotes[a]++;
-  //       }
-  //     }
-  //   }
-  //
-  //   for(int i=0;i<countNotes.length;i++){
-  //     if (countNotes[i]>max){
-  //       max=countNotes[i];
-  //       index=i;
-  //     }
-  //   }
-  //   return Notes.lastWhere((element) =>
-  //     element.Note==Consts.titles.elementAt(index)
-  //   );
-  // }
 
   Future<User?> findAuthUser() async {
     var results = await getUsers();

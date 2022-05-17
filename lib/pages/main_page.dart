@@ -41,7 +41,7 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     var pages = [
-      Calendar(),
+      Calendar(user: widget.user),
       NotesPage(user: widget.user,)
 
     ];
