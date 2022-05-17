@@ -19,7 +19,7 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, 'planner_lab4.db');
+    String path = join(documentsDirectory.path, 'planner.db');
     return await openDatabase(
       path,
       version: 1,
@@ -65,13 +65,25 @@ class DatabaseHelper {
     return usersList;
   }
 
-  Future<List<UploadedImage>> getImages(int idNote) async {
+  Future<List<UploadedImage>> getImages() async {
+    Database db = await instance.database;
+    var results = await db.query('uploaded_image');
+    List<UploadedImage> imagesList = results.isNotEmpty
+        ? results.map((c) => UploadedImage.fromJson(c)).toList()
+        : [];
+    return imagesList;
+  }
+
+  Future<UploadedImage?> getImage(int idNote) async {
     Database db = await instance.database;
     var results = await db.query('uploaded_image',where: 'idNote = ?', whereArgs: [idNote]);
     List<UploadedImage> imagesList = results.isNotEmpty
         ? results.map((c) => UploadedImage.fromJson(c)).toList()
         : [];
-    return imagesList;
+    if (imagesList.isEmpty){
+      return null;
+    }
+    return imagesList.first;
   }
 
   Future<int> getImagesCount() async {
@@ -86,6 +98,11 @@ class DatabaseHelper {
   Future<int> addImage(UploadedImage image) async {
     Database db = await instance.database;
     return await db.insert('uploaded_image', image.toJson());
+  }
+
+  Future<int> deleteImage(int idNote) async {
+    Database db = await instance.database;
+    return await db.delete('uploaded_image', where: "idNote = ?", whereArgs: [idNote]);
   }
 
   Future<Note> getNote(int id) async {
@@ -190,7 +207,7 @@ class DatabaseHelper {
     return null;
   }
 
-  Future<int> updateEvent(User user) async {
+  Future<int> updateUser(User user) async {
     Database db = await instance.database;
     return await db.update('users', user.toJson(), where: 'id = ?', whereArgs: [user.id]);
   }

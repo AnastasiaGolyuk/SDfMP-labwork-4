@@ -190,9 +190,6 @@ class _SignUpPageState extends State<SignUpPage> {
     if (!emailController.text.contains(RegExp(r'(?=.*[@.])'))){
       return "Email must contain \'@\' and \'.\' symbols!";
     }
-    if (DateTime.now().difference(date).inDays<=0){
-      return "Date must be earlier than today!";
-    }
     if (!passwordController.text.contains(RegExp(r'^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9]).{8,}$'))){
       return "Password\'s length must be at least 8 symbols and contains at least one upper and lower case letters and digit!";
     } else {

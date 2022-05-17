@@ -1,4 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:planner/consts/consts.dart';
 
 class NoteFormWidget extends StatelessWidget {
   final String? title;
@@ -16,16 +18,18 @@ class NoteFormWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SingleChildScrollView(
-    child: Padding(
+    child: Container(
+      width: Consts.getWidth(context)-30,
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(30),
+          color: Consts.bgColor),
       padding: EdgeInsets.all(16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-
           buildTitle(),
-          SizedBox(height: 8),
           buildDescription(),
-          SizedBox(height: 16),
+          SizedBox(height: 10),
         ],
       ),
     ),
@@ -35,14 +39,13 @@ class NoteFormWidget extends StatelessWidget {
     maxLines: 1,
     initialValue: title,
     style: TextStyle(
-      color: Colors.white70,
-      fontWeight: FontWeight.bold,
-      fontSize: 24,
+      color: Colors.black,
+      fontSize: 18,
     ),
     decoration: InputDecoration(
       border: InputBorder.none,
-      hintText: 'Title',
-      hintStyle: TextStyle(color: Colors.white70),
+      hintText: 'Header',
+      hintStyle: TextStyle(color: Colors.grey.shade500),
     ),
     validator: (title) =>
     title != null && title.isEmpty ? 'The title cannot be empty' : null,
@@ -50,13 +53,13 @@ class NoteFormWidget extends StatelessWidget {
   );
 
   Widget buildDescription() => TextFormField(
-    maxLines: 5,
+    maxLines: 10,
     initialValue: description,
-    style: TextStyle(color: Colors.white60, fontSize: 18),
+    style: TextStyle(color: Colors.black, fontSize: 16),
     decoration: InputDecoration(
       border: InputBorder.none,
-      hintText: 'Type something...',
-      hintStyle: TextStyle(color: Colors.white60),
+      hintText: 'Start typing',
+      hintStyle: TextStyle(color: Colors.grey.shade500),
     ),
     validator: (title) => title != null && title.isEmpty
         ? 'The description cannot be empty'
