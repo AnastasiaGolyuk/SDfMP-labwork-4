@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:planner/consts/consts.dart';
 import 'package:planner/db/db_helper.dart';
 import 'package:planner/models/event.dart';
@@ -5,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../models/user.dart';
+import 'add_change_event_page.dart';
 
 class Calendar extends StatefulWidget {
   const Calendar({Key? key, required this.user}) : super(key: key);
@@ -34,13 +36,30 @@ class _CalendarState extends State<Calendar> {
   Future<List<Event>> fetchEvents() async {
     var evnts = await DatabaseHelper.instance.getEvents();
     List<Event> res = List.empty(growable: true);
-    for (Event event in evnts) {
-      if (event.idUser == widget.user.id) {
-        res.add(event);
-        selectedEvents[DateTime.parse(event.date)]?.add(event);
+    if (evnts.isNotEmpty) {
+      for (Event event in evnts) {
+        if (event.idUser == widget.user.id) {
+          res.add(event);
+          if (selectedEvents[DateTime.parse(event.start)] == null) {
+            print("ee");
+            selectedEvents[DateTime.parse(event.start)] = [event];
+          } else {
+            var list = selectedEvents[DateTime.parse(event.start)];
+            bool exists = false;
+            for (Event existEvent in list!) {
+              if (event.id == existEvent.id) {
+                exists = true;
+                break;
+              }
+            }
+            if (!exists) {
+              selectedEvents[DateTime.parse(event.start)]?.add(event);
+            }
+          }
+        }
       }
     }
-
+    print("rrrrr ${res[0].start}");
     return res;
   }
 
@@ -53,7 +72,7 @@ class _CalendarState extends State<Calendar> {
   }
 
   List<Event> _getEventsfromDay(DateTime date) {
-    return selectedEvents[date] ?? [];
+    return selectedEvents[date]??[];
   }
 
   @override
@@ -65,7 +84,9 @@ class _CalendarState extends State<Calendar> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
+      backgroundColor: Colors.white,
+      body: SingleChildScrollView(
+          child: Column(
         children: [
           TableCalendar(
             focusedDay: selectedDay,
@@ -77,7 +98,7 @@ class _CalendarState extends State<Calendar> {
                 format = _format;
               });
             },
-            startingDayOfWeek: StartingDayOfWeek.sunday,
+            startingDayOfWeek: StartingDayOfWeek.monday,
             daysOfWeekVisible: true,
             onDaySelected: (DateTime selectDay, DateTime focusDay) {
               setState(() {
@@ -124,58 +145,41 @@ class _CalendarState extends State<Calendar> {
               ),
             ),
           ),
-          ..._getEventsfromDay(selectedDay).map(
-            (Event event) => ListTile(
-              title: Text(
-                event.title,
-              ),
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: Consts.btnColor,
-        onPressed: () => showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text("Add Event"),
-            content: TextFormField(
-              controller: _eventController,
-            ),
-            actions: [
-              TextButton(
-                child: Text("Cancel"),
-                onPressed: () => Navigator.pop(context),
-              ),
-              TextButton(
-                child: Text("Ok"),
-                onPressed: () async {
-                  if (_eventController.text.isNotEmpty) {
-                    var id = await DatabaseHelper.instance.getEventsCount() + 1;
-                    var event = Event(
-                        idUser: widget.user.id,
-                        id: id,
-                        title: _eventController.text,
-                        date: selectedDay.toString());
-                    //await DatabaseHelper.instance.addEvent(event);
-                    if (selectedEvents[selectedDay] != null) {
-                      selectedEvents[selectedDay]?.add(event);
-                    } else {
-                      selectedEvents[selectedDay] = [
-                        event
-                      ];
-                    }
-                  }
-                  Navigator.pop(context);
-                  _eventController.clear();
-                  return;
-                },
-              ),
-            ],
-          ),
+           ..._getEventsfromDay(selectedDay).map((Event event) => ListTile(title: Text(event.title),)
+          // Container(
+          //       padding: EdgeInsets.all(10),
+          //       child: Row(
+          //         children: [
+          //           Text(
+          //             event.title,
+          //             style: TextStyle(fontSize: 18, color: Colors.black),
+          //           ),
+          //           SizedBox(
+          //             width: 2,
+          //           ),
+          //           Text(
+          //             DateTime.parse(event.start).difference(DateTime.now()) ==
+          //                     0
+          //                 ? "(${DateFormat.MMMd().format(DateTime.parse(event.start))})"
+          //                 : "(today)",
+          //             style: TextStyle(fontSize: 18, color: Colors.black),
+          //           ),
+          //         ],
+          //       ),
+          //     )
         ),
-        label: Text("Add Event"),
-        icon: Icon(Icons.add),
+        ],
+      )),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Consts.btnColor,
+        onPressed: () async {
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+                builder: (context) => AddChangeEventPage(user: widget.user)),
+          );
+          initEvents();
+        },
+        child: Icon(Icons.add),
       ),
     );
   }

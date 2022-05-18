@@ -70,7 +70,6 @@ class NoteCardWidget extends StatelessWidget {
     );
   }
 
-  /// To return different height for different widgets
   double getMinHeight() {
     if (imgBytes.length<=1) {
       return 120;

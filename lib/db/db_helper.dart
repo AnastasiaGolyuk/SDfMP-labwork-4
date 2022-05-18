@@ -20,7 +20,7 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, 'planner_4.db');
+    String path = join(documentsDirectory.path, 'planner___lab4.db');
     return await openDatabase(
       path,
       version: 1,
@@ -61,7 +61,10 @@ class DatabaseHelper {
           id INTEGER PRIMARY KEY,
           idUser INTEGER,
           title TEXT,
-          date TEXT
+          start TEXT,
+          end TEXT,
+          isAllDay INTEGER,
+          repeat TEXT
       )
       ''');
   }
