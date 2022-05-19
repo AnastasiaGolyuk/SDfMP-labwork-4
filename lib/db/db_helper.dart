@@ -20,7 +20,7 @@ class DatabaseHelper {
 
   Future<Database> _initDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, 'planner___lab4.db');
+    String path = join(documentsDirectory.path, 'labwork__4__planner.db');
     return await openDatabase(
       path,
       version: 1,
@@ -148,7 +148,7 @@ class DatabaseHelper {
 
   Future<int> updateEvent(Event event) async {
     Database db = await instance.database;
-    return await db.update('events', event.toJson(), where: 'id = ?', whereArgs: [event.id]);
+    return await db.update('events', event.toJson(), where: 'id = ?', whereArgs: [event.id], );
   }
 
   Future<Note> getNote(int id) async {

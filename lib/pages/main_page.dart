@@ -24,7 +24,6 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  //int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -43,7 +42,6 @@ class _MainPageState extends State<MainPage> {
     var pages = [
       Calendar(user: widget.user),
       NotesPage(user: widget.user,)
-
     ];
     return Scaffold(
         backgroundColor: Colors.white,

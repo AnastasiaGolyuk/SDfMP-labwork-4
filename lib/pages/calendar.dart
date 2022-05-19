@@ -1,9 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import 'package:planner/consts/consts.dart';
 import 'package:planner/db/db_helper.dart';
 import 'package:planner/models/event.dart';
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:get/get.dart';
 
 import '../models/user.dart';
 import 'add_change_event_page.dart';
@@ -24,8 +26,6 @@ class _CalendarState extends State<Calendar> {
   DateTime selectedDay = DateTime.now();
   DateTime focusedDay = DateTime.now();
 
-  TextEditingController _eventController = TextEditingController();
-
   @override
   void initState() {
     selectedEvents = {};
@@ -40,11 +40,16 @@ class _CalendarState extends State<Calendar> {
       for (Event event in evnts) {
         if (event.idUser == widget.user.id) {
           res.add(event);
-          if (selectedEvents[DateTime.parse(event.start)] == null) {
-            print("ee");
-            selectedEvents[DateTime.parse(event.start)] = [event];
+          if (selectedEvents[DateTime.parse(event.start.substring(0, 10))] ==
+              null) {
+            setState(() {
+              selectedEvents[DateTime.parse(event.start.substring(0, 10))] = [
+                event
+              ];
+            });
           } else {
-            var list = selectedEvents[DateTime.parse(event.start)];
+            var list =
+                selectedEvents[DateTime.parse(event.start.substring(0, 10))];
             bool exists = false;
             for (Event existEvent in list!) {
               if (event.id == existEvent.id) {
@@ -53,13 +58,15 @@ class _CalendarState extends State<Calendar> {
               }
             }
             if (!exists) {
-              selectedEvents[DateTime.parse(event.start)]?.add(event);
+              setState(() {
+                selectedEvents[DateTime.parse(event.start.substring(0, 10))]
+                    ?.add(event);
+              });
             }
           }
         }
       }
     }
-    print("rrrrr ${res[0].start}");
     return res;
   }
 
@@ -72,12 +79,13 @@ class _CalendarState extends State<Calendar> {
   }
 
   List<Event> _getEventsfromDay(DateTime date) {
-    return selectedEvents[date]??[];
+    return selectedEvents[DateTime.parse(
+            date.toString().substring(0, date.toString().length - 2))] ??
+        [];
   }
 
   @override
   void dispose() {
-    _eventController.dispose();
     super.dispose();
   }
 
@@ -145,39 +153,77 @@ class _CalendarState extends State<Calendar> {
               ),
             ),
           ),
-           ..._getEventsfromDay(selectedDay).map((Event event) => ListTile(title: Text(event.title),)
-          // Container(
-          //       padding: EdgeInsets.all(10),
-          //       child: Row(
-          //         children: [
-          //           Text(
-          //             event.title,
-          //             style: TextStyle(fontSize: 18, color: Colors.black),
-          //           ),
-          //           SizedBox(
-          //             width: 2,
-          //           ),
-          //           Text(
-          //             DateTime.parse(event.start).difference(DateTime.now()) ==
-          //                     0
-          //                 ? "(${DateFormat.MMMd().format(DateTime.parse(event.start))})"
-          //                 : "(today)",
-          //             style: TextStyle(fontSize: 18, color: Colors.black),
-          //           ),
-          //         ],
-          //       ),
-          //     )
-        ),
+          ..._getEventsfromDay(selectedDay).map((Event event) => InkWell(
+              onTap: () {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                      builder: (context) => AddChangeEventPage(
+                            user: widget.user,
+                            event: event,
+                          )),
+                );
+              },
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(children: [
+                      Text(
+                        "●",
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Consts.btnColor),
+                      ),
+                      SizedBox(
+                        width: 2,
+                      ),
+                      Text(
+                        event.title,
+                        style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.black,
+                            decoration: DateTime.parse(event.start)
+                                        .difference(DateTime.now())
+                                        .inDays <
+                                    0
+                                ? TextDecoration.lineThrough
+                                : null),
+                      ),
+                      SizedBox(
+                        width: 5,
+                      ),
+                      Text(
+                          DateTime.parse(event.start)
+                                      .difference(DateTime.now())
+                                      .inDays ==
+                                  0
+                              ? "(today)"
+                              : "(${DateFormat.MMMd().format(DateTime.parse(event.start))})",
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey,
+                          ))
+                    ]),
+                    Text(
+                      event.isAllDay == 0
+                          ? "${DateFormat.jm().format(DateTime.parse(event.start))}"
+                          : "all day",
+                      style: TextStyle(fontSize: 18, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ))),
         ],
       )),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Consts.btnColor,
         onPressed: () async {
-          await Navigator.of(context).push(
+          await Navigator.of(context).pushReplacement(
             MaterialPageRoute(
                 builder: (context) => AddChangeEventPage(user: widget.user)),
           );
-          initEvents();
         },
         child: Icon(Icons.add),
       ),

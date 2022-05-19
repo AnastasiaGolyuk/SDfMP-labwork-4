@@ -30,4 +30,10 @@ class Event {
     "repeat": repeat,
     "isAllDay": isAllDay
   };
+
+  @override
+  String toString() {
+    // TODO: implement toString
+    return title+" "+idUser.toString();
+  }
 }

@@ -1,11 +1,13 @@
 import 'package:bottom_picker/bottom_picker.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:planner/consts/consts.dart';
 import 'package:planner/db/db_helper.dart';
 import 'package:planner/models/event.dart';
 import 'package:planner/models/user.dart';
-
+import 'package:planner/pages/calendar.dart';
+import 'package:planner/pages/main_page.dart';
 
 class AddChangeEventPage extends StatefulWidget {
   const AddChangeEventPage({
@@ -22,7 +24,6 @@ class AddChangeEventPage extends StatefulWidget {
 }
 
 class _AddChangeEventPageState extends State<AddChangeEventPage> {
-  final _formKey = GlobalKey<FormState>();
   String title = "";
   bool isAllDay = true;
   DateTime start = DateTime.now();
@@ -40,12 +41,12 @@ class _AddChangeEventPageState extends State<AddChangeEventPage> {
     super.initState();
     setState(() {
       repeat = list[0].data!;
-      if (widget.event!=null){
-        title=widget.event!.title;
-        start=DateTime.parse(widget.event!.start);
-        end=DateTime.parse(widget.event!.end);
-        repeat=widget.event!.repeat;
-        isAllDay=widget.event!.isAllDay==0?false:true;
+      if (widget.event != null) {
+        title = widget.event!.title;
+        start = DateTime.parse(widget.event!.start);
+        end = DateTime.parse(widget.event!.end);
+        repeat = widget.event!.repeat;
+        isAllDay = widget.event!.isAllDay == 0 ? false : true;
       }
     });
   }
@@ -58,11 +59,30 @@ class _AddChangeEventPageState extends State<AddChangeEventPage> {
           widget.event == null ? "Create Event" : "Edit Event",
           style: TextStyle(fontSize: 18, color: Consts.textColor),
         ),
+        leading: IconButton(onPressed: () { Navigator.pushReplacement(context, MaterialPageRoute(
+            builder: (context) => MainPage(
+              user: widget.user, index: 0,
+            ))); }, icon: Icon(CupertinoIcons.back),),
         centerTitle: true,
         iconTheme: IconThemeData(color: Consts.textColor),
         backgroundColor: Colors.white,
         shadowColor: Colors.transparent,
-        actions: [buildButton()],
+        actions: [
+          buildButton(),
+          if (widget.event != null)
+              IconButton(
+                  onPressed: () async {
+                    await DatabaseHelper.instance.deleteEvent(widget.event!.id);
+                    Navigator.pushReplacement(context, MaterialPageRoute(
+                        builder: (context) => MainPage(
+                          user: widget.user, index: 0,
+                        )));
+                  },
+                  icon: Icon(
+                    CupertinoIcons.delete,
+                    color: Colors.red[300],
+                  ))
+        ],
       ),
       body: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
         Container(alignment: Alignment.center, child: buildForm()),
@@ -96,24 +116,26 @@ class _AddChangeEventPageState extends State<AddChangeEventPage> {
   Widget buildTitle() => Container(
       decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15), color: Consts.bgColor),
-      child: TextFormField(
-          maxLines: 1,
-          initialValue: title,
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-          ),
-          decoration: InputDecoration(
-            border: InputBorder.none,
-            hintText: '    Event Title',
-            hintStyle: TextStyle(color: Colors.grey.shade500),
-          ),
-          validator: (title) => title != null && title.isEmpty
-              ? 'The title cannot be empty'
-              : null,
-          onChanged: (title) => setState(
-                () => this.title = title,
-              )));
+      child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 10),
+          child: TextFormField(
+              maxLines: 1,
+              initialValue: title,
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 18,
+              ),
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                hintText: 'Event Title',
+                hintStyle: TextStyle(color: Colors.grey.shade500),
+              ),
+              validator: (title) => title != null && title.isEmpty
+                  ? 'The title cannot be empty'
+                  : null,
+              onChanged: (title) => setState(
+                    () => this.title = title,
+                  ))));
 
   Widget buildIsAllDay() => Container(
       height: 42,
@@ -307,14 +329,16 @@ class _AddChangeEventPageState extends State<AddChangeEventPage> {
   }
 
   void addOrUpdateEvent() async {
-      await addEvent();
-      Navigator.of(context).pop();
-
+    await addEvent();
+    Navigator.pushReplacement(context, MaterialPageRoute(
+        builder: (context) => MainPage(
+          user: widget.user, index: 0,
+        )));
   }
 
   Future addEvent() async {
     var id = 0;
-    if (widget.event==null){
+    if (widget.event == null) {
       id = await DatabaseHelper.instance.getEventsCount() + 1;
     } else {
       id = widget.event!.id;
@@ -327,7 +351,7 @@ class _AddChangeEventPageState extends State<AddChangeEventPage> {
         end: end.toString(),
         repeat: repeat,
         isAllDay: isAllDay == true ? 1 : 0);
-    if (widget.event==null) {
+    if (widget.event == null) {
       await DatabaseHelper.instance.addEvent(event);
     } else {
       await DatabaseHelper.instance.updateEvent(event);
